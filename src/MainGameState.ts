@@ -8,6 +8,7 @@ export class MainGameState extends State<Game> {
     get numbers(): Array<NumberButton> {
         return this._numbers;
     }
+
     private _numbers: Array<NumberButton>;
 
     private _scoreText: pixi.Text;
@@ -29,7 +30,7 @@ export class MainGameState extends State<Game> {
         this._currentNumber = 0;
         this._sumTick = 0;
         this._addCountDown = 100;
-        var number = new NumberButton(this, this._currentNumber, Math.random()*(this.obj.app.renderer.width-48), Math.random()*(this.obj.app.renderer.height-48));
+        var number = new NumberButton(this, this._currentNumber, Math.random() * (this.obj.app.renderer.width - 48), Math.random() * (this.obj.app.renderer.height - 48));
         this._currentNumber += 1;
         this._currentNumber %= 10;
         this.obj.score = 0;
@@ -57,7 +58,7 @@ export class MainGameState extends State<Game> {
         this._sumTick += delta;
         if (this._addCountDown <= 0) {
             this.resetCountDown();
-            var number = new NumberButton(this, this._currentNumber, Math.random()*(this.obj.app.renderer.width-48), Math.random()*(this.obj.app.renderer.height-48));
+            var number = new NumberButton(this, this._currentNumber, Math.random() * (this.obj.app.renderer.width - 48), Math.random() * (this.obj.app.renderer.height - 48));
             this._currentNumber += 1;
             this._currentNumber %= 10;
             this.numbers.push(number);
@@ -70,7 +71,7 @@ export class MainGameState extends State<Game> {
         var number = this._numbers.shift();
         this.obj.app.stage.removeChild(number.sprite());
         this._scoreText.text = `${this.obj.score}`;
-        if(this._numbers.length <= 0){
+        if (this._numbers.length <= 0) {
             this.resetCountDown();
             var newNumber = new NumberButton(this, this._currentNumber, Math.random() * (this.obj.app.renderer.width - 48), Math.random() * (this.obj.app.renderer.height - 48));
             this._currentNumber += 1;
@@ -81,10 +82,11 @@ export class MainGameState extends State<Game> {
     }
 
     public gameOver() {
-        this.obj.state = new GameoverGameState(this.obj, this._numbers);
+        console.log(this._numbers);
+        this.obj.state = new GameoverGameState(this.obj, this._numbers, this._scoreText);
     }
 
     private resetCountDown() {
-        this._addCountDown = 100 * Math.pow(Math.exp(-0.0002 * this._sumTick), 1 / (1 + (Math.min(this._numbers.length, 1) * 0.1)));
+        this._addCountDown = 100 * Math.exp(-0.0005 * this._sumTick / Math.max(this._numbers.length, 1));
     }
 }
