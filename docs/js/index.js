@@ -20799,10 +20799,11 @@ var MainGameState = /** @class */ (function (_super) {
         }
     };
     MainGameState.prototype.gameOver = function () {
-        this.obj.state = new GameoverGameState_1.GameoverGameState(this.obj, this._numbers);
+        console.log(this._numbers);
+        this.obj.state = new GameoverGameState_1.GameoverGameState(this.obj, this._numbers, this._scoreText);
     };
     MainGameState.prototype.resetCountDown = function () {
-        this._addCountDown = 100 * Math.pow(Math.exp(-0.0002 * this._sumTick), 1 / (1 + (Math.min(this._numbers.length, 1) * 0.1)));
+        this._addCountDown = 100 * Math.exp(-0.0005 * this._sumTick / Math.max(this._numbers.length, 1));
     };
     return MainGameState;
 }(State_1.State));
@@ -41799,12 +41800,18 @@ var TitleGameState = /** @class */ (function (_super) {
     }
     TitleGameState.prototype.onLeave = function () {
         this.obj.app.stage.removeChild(this.titleButton);
+        this.obj.app.stage.removeChild(this.jamVersionButton);
     };
     TitleGameState.prototype.onEnter = function () {
-        var _this = this;
         this.titleButton = new pixi.Text("start", {
             fontFamily: "Futura",
-            fontSize: 72,
+            fontSize: this.obj.app.renderer.width * 0.1,
+            fill: 0xf9f9f9,
+            align: 'center'
+        });
+        this.jamVersionButton = new pixi.Text('Play (fxxkin\' buggy) "#traP3jam" version.', {
+            fontFamily: "Futura",
+            fontSize: this.obj.app.renderer.width * 0.03,
             fill: 0xf9f9f9,
             align: 'center'
         });
@@ -41813,13 +41820,23 @@ var TitleGameState = /** @class */ (function (_super) {
         this.titleButton.position.x = this.obj.app.renderer.width * 0.5;
         this.titleButton.position.y = this.obj.app.renderer.height * 0.5;
         this.titleButton.interactive = true;
-        this.titleButton.on("click", function () {
-            _this.obj.state = new MainGameState_1.MainGameState(_this.obj);
-        });
-        this.titleButton.on("touchstart", function () {
-            _this.obj.state = new MainGameState_1.MainGameState(_this.obj);
-        });
+        this.titleButton.on("click", this.onTitleButtonClicked.bind(this));
+        this.titleButton.on("touchstart", this.onTitleButtonClicked.bind(this));
         this.obj.app.stage.addChild(this.titleButton);
+        this.jamVersionButton.anchor.x = 0.5;
+        this.jamVersionButton.anchor.y = 0.5;
+        this.jamVersionButton.position.x = this.obj.app.renderer.width * 0.5;
+        this.jamVersionButton.position.y = this.obj.app.renderer.height * 0.75;
+        this.jamVersionButton.interactive = true;
+        this.jamVersionButton.on("click", this.onJamVersionButtonClicked.bind(this));
+        this.jamVersionButton.on("touchstart", this.onJamVersionButtonClicked.bind(this));
+        this.obj.app.stage.addChild(this.jamVersionButton);
+    };
+    TitleGameState.prototype.onJamVersionButtonClicked = function () {
+        window.open("jam/index.html", "_self");
+    };
+    TitleGameState.prototype.onTitleButtonClicked = function () {
+        this.obj.state = new MainGameState_1.MainGameState(this.obj);
     };
     TitleGameState.prototype.update = function (delta) {
     };
@@ -41893,16 +41910,21 @@ var pixi = __webpack_require__(10);
 var MainGameState_1 = __webpack_require__(90);
 var GameoverGameState = /** @class */ (function (_super) {
     __extends(GameoverGameState, _super);
-    function GameoverGameState(game, numbers) {
-        return _super.call(this, game) || this;
+    function GameoverGameState(game, numbers, scoreText) {
+        var _this = _super.call(this, game) || this;
+        _this._numbers = numbers;
+        _this._scoreText = scoreText;
+        return _this;
     }
     GameoverGameState.prototype.onLeave = function () {
         var _this = this;
         this.obj.app.stage.removeChild(this.retryButton);
         this.obj.app.stage.removeChild(this.tweetButton);
+        console.log(this._numbers);
         this._numbers.forEach(function (v) {
-            _this.obj.app.stage.removeChild(v);
+            _this.obj.app.stage.removeChild(v.sprite());
         });
+        this.obj.app.stage.removeChild(this._scoreText);
     };
     GameoverGameState.prototype.onEnter = function () {
         var _this = this;
@@ -41935,19 +41957,15 @@ var GameoverGameState = /** @class */ (function (_super) {
         this.tweetButton.position.x = this.obj.app.renderer.width * 0.75;
         this.tweetButton.position.y = this.obj.app.renderer.height * 0.5;
         this.tweetButton.interactive = true;
-        this.tweetButton.on("click", function () {
-            var text = "\u3042\u306A\u305F\u306E\u5B9F\u9A13\u306E\u30B9\u30B3\u30A2\u306F\"" + _this.obj.score + "\"\u3067\u3057\u305F\u3002 #\u3055\u308B\u306E\u3058\u3063\u3051\u3093 #traP3jam";
-            var url = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
-            var win = window.open(url, '_blank');
-            win.focus();
-        });
-        this.tweetButton.on("touchstart", function () {
-            var text = "\u3042\u306A\u305F\u306E\u5B9F\u9A13\u306E\u30B9\u30B3\u30A2\u306F\"" + _this.obj.score + "\"\u3067\u3057\u305F\u3002 #\u3055\u308B\u306E\u3058\u3063\u3051\u3093 #traP3jam";
-            var url = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
-            var win = window.open(url, '_blank');
-            win.focus();
-        });
+        this.tweetButton.on("click", this.onTweetButtonClicked.bind(this));
+        this.tweetButton.on("touchstart", this.onTweetButtonClicked.bind(this));
         this.obj.app.stage.addChild(this.tweetButton);
+    };
+    GameoverGameState.prototype.onTweetButtonClicked = function () {
+        var text = "\u3042\u306A\u305F\u306E\u5B9F\u9A13\u306E\u30B9\u30B3\u30A2\u306F\"" + this.obj.score + "\"\u3067\u3057\u305F\u3002 #\u3055\u308B\u306E\u3058\u3063\u3051\u3093 #traP3jam";
+        var url = "https://twitter.com/intent/tweet?url=" + encodeURIComponent(window.location.href) + "&text=" + encodeURIComponent(text);
+        var win = window.open(url, '_blank');
+        win.focus();
     };
     GameoverGameState.prototype.update = function (delta) {
     };
