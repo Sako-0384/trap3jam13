@@ -20803,7 +20803,13 @@ var MainGameState = /** @class */ (function (_super) {
         this.obj.state = new GameoverGameState_1.GameoverGameState(this.obj, this._gameField, this._scoreText);
     };
     MainGameState.prototype.resetCountDown = function () {
-        this._addCountDown = 100 * Math.exp(-0.0005 * this._sumTick / Math.max(this._numbers.length, 1));
+        this._addCountDown = 50 * Math.exp(-0.00012 * this._sumTick / Math.max(this._numbers.length, 1));
+    };
+    MainGameState.prototype.skipNumber = function () {
+        if (Math.random() < (1 - Math.exp(-Math.max(0, this.obj.score - 50) * 0.002)) * 0.5) {
+            this._currentNumber += 1;
+            this._currentNumber %= 10;
+        }
     };
     MainGameState.prototype.onFieldClicked = function (e) {
         var _this = this;
@@ -20825,6 +20831,7 @@ var MainGameState = /** @class */ (function (_super) {
         var number = new NumberButton_1.NumberButton(this, this._currentNumber, this.buttonSize(), Math.random() * (this.obj.app.renderer.width - this.buttonSize()), Math.random() * (this.obj.app.renderer.height - this.buttonSize()));
         this._currentNumber += 1;
         this._currentNumber %= 10;
+        this.skipNumber();
         return number;
     };
     MainGameState.prototype.buttonSize = function () {

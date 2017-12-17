@@ -92,7 +92,14 @@ export class MainGameState extends State<Game> {
     }
 
     private resetCountDown() {
-        this._addCountDown = 100 * Math.exp(-0.0005 * this._sumTick / Math.max(this._numbers.length, 1));
+        this._addCountDown = 50 * Math.exp(-0.00012 * this._sumTick / Math.max(this._numbers.length, 1));
+    }
+
+    private skipNumber() {
+        if (Math.random()<(1 - Math.exp(-Math.max(0, this.obj.score - 50) * 0.002))*0.5) {
+            this._currentNumber += 1;
+            this._currentNumber %= 10;
+        }
     }
 
     onFieldClicked(e) {
@@ -123,6 +130,7 @@ export class MainGameState extends State<Game> {
         );
         this._currentNumber += 1;
         this._currentNumber %= 10;
+        this.skipNumber();
         return number;
     }
 
