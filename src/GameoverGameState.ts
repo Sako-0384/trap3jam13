@@ -7,16 +7,14 @@ import {NumberButton} from "./NumberButton";
 export class GameoverGameState extends State<Game> {
     private retryButton: pixi.Text;
     private tweetButton: pixi.Text;
-    private _numbers: Array<NumberButton>;
+    private _gameField: pixi.Container;
     private _scoreText: pixi.Text;
 
     onLeave() {
         this.obj.app.stage.removeChild(this.retryButton);
         this.obj.app.stage.removeChild(this.tweetButton);
-        console.log(this._numbers);
-        this._numbers.forEach((v)=> {
-            this.obj.app.stage.removeChild(v.sprite());
-        });
+        this._gameField.removeChildren();
+        this.obj.app.stage.removeChild(this._gameField);
         this.obj.app.stage.removeChild(this._scoreText);
     }
 
@@ -35,12 +33,8 @@ export class GameoverGameState extends State<Game> {
         this.retryButton.position.x = this.obj.app.renderer.width * 0.25;
         this.retryButton.position.y = this.obj.app.renderer.height * 0.5;
         this.retryButton.interactive = true;
-        this.retryButton.on("click", () => {
-            this.obj.state = new MainGameState(this.obj);
-        });
-        this.retryButton.on("touchstart", () => {
-            this.obj.state = new MainGameState(this.obj);
-        });
+        this.retryButton.on("click", this.onRetryButtonClicked.bind(this));
+        this.retryButton.on("touchstart", this.onRetryButtonClicked.bind(this));
 
         this.obj.app.stage.addChild(this.retryButton);
 
@@ -64,6 +58,10 @@ export class GameoverGameState extends State<Game> {
         this.obj.app.stage.addChild(this.tweetButton);
     }
 
+    onRetryButtonClicked() {
+        this.obj.state = new MainGameState(this.obj);
+    }
+
     onTweetButtonClicked() {
         const text = `あなたの実験のスコアは"${this.obj.score}"でした。 #さるのじっけん #traP3jam`;
         const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(text)}`;
@@ -74,9 +72,9 @@ export class GameoverGameState extends State<Game> {
     update(delta: number) {
     }
 
-    constructor(game: Game, numbers: Array<NumberButton>, scoreText: pixi.Text) {
+    constructor(game: Game, gameField: pixi.Container, scoreText: pixi.Text) {
         super(game);
-        this._numbers = numbers;
+        this._gameField = gameField;
         this._scoreText = scoreText;
     }
 }

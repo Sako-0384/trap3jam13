@@ -20753,12 +20753,7 @@ var MainGameState = /** @class */ (function (_super) {
         this._currentNumber = 0;
         this._sumTick = 0;
         this._addCountDown = 100;
-        var number = new NumberButton_1.NumberButton(this, this._currentNumber, Math.random() * (this.obj.app.renderer.width - 48), Math.random() * (this.obj.app.renderer.height - 48));
-        this._currentNumber += 1;
-        this._currentNumber %= 10;
         this.obj.score = 0;
-        this.numbers.push(number);
-        this.obj.app.stage.addChild(number.sprite());
         this._scoreText = new pixi.Text("" + this.obj.score, {
             fontFamily: "Futura",
             fontSize: this.obj.app.renderer.width / 2,
@@ -20771,39 +20766,69 @@ var MainGameState = /** @class */ (function (_super) {
         this._scoreText.position.x = this.obj.app.renderer.width * 0.5;
         this._scoreText.position.y = this.obj.app.renderer.height * 0.5;
         this.obj.app.stage.addChild(this._scoreText);
+        this._gameField = new pixi.Container();
+        this._gameField.interactive = true;
+        this._gameField.on("click", this.onFieldClicked.bind(this));
+        this._gameField.on("touchstart", this.onFieldClicked.bind(this));
+        this._gameField.hitArea = new pixi.Rectangle(0, 0, this.obj.app.renderer.width, this.obj.app.renderer.height);
+        var number = this.generateNewNumberButton();
+        this.numbers.push(number);
+        this._gameField.addChild(number.sprite());
+        this.obj.app.stage.addChild(this._gameField);
     };
     MainGameState.prototype.update = function (delta) {
         this._addCountDown -= delta;
         this._sumTick += delta;
         if (this._addCountDown <= 0) {
             this.resetCountDown();
-            var number = new NumberButton_1.NumberButton(this, this._currentNumber, Math.random() * (this.obj.app.renderer.width - 48), Math.random() * (this.obj.app.renderer.height - 48));
-            this._currentNumber += 1;
-            this._currentNumber %= 10;
+            var number = this.generateNewNumberButton();
             this.numbers.push(number);
-            this.obj.app.stage.addChild(number.sprite());
+            this._gameField.addChild(number.sprite());
         }
     };
     MainGameState.prototype.deleteTopButton = function () {
         this.obj.score = this.obj.score + 1;
         var number = this._numbers.shift();
-        this.obj.app.stage.removeChild(number.sprite());
+        this._gameField.removeChild(number.sprite());
         this._scoreText.text = "" + this.obj.score;
         if (this._numbers.length <= 0) {
             this.resetCountDown();
-            var newNumber = new NumberButton_1.NumberButton(this, this._currentNumber, Math.random() * (this.obj.app.renderer.width - 48), Math.random() * (this.obj.app.renderer.height - 48));
-            this._currentNumber += 1;
-            this._currentNumber %= 10;
+            var newNumber = this.generateNewNumberButton();
             this.numbers.push(newNumber);
-            this.obj.app.stage.addChild(newNumber.sprite());
+            this._gameField.addChild(newNumber.sprite());
         }
     };
     MainGameState.prototype.gameOver = function () {
-        console.log(this._numbers);
-        this.obj.state = new GameoverGameState_1.GameoverGameState(this.obj, this._numbers, this._scoreText);
+        this._gameField.interactive = false;
+        this.obj.state = new GameoverGameState_1.GameoverGameState(this.obj, this._gameField, this._scoreText);
     };
     MainGameState.prototype.resetCountDown = function () {
         this._addCountDown = 100 * Math.exp(-0.0005 * this._sumTick / Math.max(this._numbers.length, 1));
+    };
+    MainGameState.prototype.onFieldClicked = function (e) {
+        var _this = this;
+        var p = e.data.global;
+        this._numbers.some(function (value, index) {
+            if (value.sprite().containsPoint(p)) {
+                if (index === 0) {
+                    _this.deleteTopButton();
+                }
+                else {
+                    _this.gameOver();
+                }
+                return true;
+            }
+            return false;
+        });
+    };
+    MainGameState.prototype.generateNewNumberButton = function () {
+        var number = new NumberButton_1.NumberButton(this, this._currentNumber, this.buttonSize(), Math.random() * (this.obj.app.renderer.width - this.buttonSize()), Math.random() * (this.obj.app.renderer.height - this.buttonSize()));
+        this._currentNumber += 1;
+        this._currentNumber %= 10;
+        return number;
+    };
+    MainGameState.prototype.buttonSize = function () {
+        return Math.min(this.obj.app.renderer.width, this.obj.app.renderer.height) * 0.16;
     };
     return MainGameState;
 }(State_1.State));
@@ -41854,34 +41879,23 @@ exports.TitleGameState = TitleGameState;
 Object.defineProperty(exports, "__esModule", { value: true });
 var pixi = __webpack_require__(10);
 var NumberButton = /** @class */ (function () {
-    function NumberButton(state, n, x, y) {
+    function NumberButton(state, n, buttonSize, x, y) {
         this.n = n;
         this.x = x;
         this.y = y;
         this.e = new pixi.Text("" + this.n, {
             fontFamily: "Futura",
-            fontSize: 48,
+            fontSize: buttonSize,
             fill: 0xf9f9f9,
             align: 'center'
         });
         this.e.position.x = x;
         this.e.position.y = y;
-        this.e.interactive = true;
-        this.e.on('click', this.onClick.bind(this));
-        this.e.on('touchstart', this.onClick.bind(this));
         this.state = state;
         this.cascadeCount = 0;
     }
     NumberButton.prototype.sprite = function () {
         return this.e;
-    };
-    NumberButton.prototype.onClick = function () {
-        if (this.state.numbers[0] === this) {
-            this.state.deleteTopButton();
-        }
-        else {
-            this.state.gameOver();
-        }
     };
     return NumberButton;
 }());
@@ -41910,24 +41924,20 @@ var pixi = __webpack_require__(10);
 var MainGameState_1 = __webpack_require__(90);
 var GameoverGameState = /** @class */ (function (_super) {
     __extends(GameoverGameState, _super);
-    function GameoverGameState(game, numbers, scoreText) {
+    function GameoverGameState(game, gameField, scoreText) {
         var _this = _super.call(this, game) || this;
-        _this._numbers = numbers;
+        _this._gameField = gameField;
         _this._scoreText = scoreText;
         return _this;
     }
     GameoverGameState.prototype.onLeave = function () {
-        var _this = this;
         this.obj.app.stage.removeChild(this.retryButton);
         this.obj.app.stage.removeChild(this.tweetButton);
-        console.log(this._numbers);
-        this._numbers.forEach(function (v) {
-            _this.obj.app.stage.removeChild(v.sprite());
-        });
+        this._gameField.removeChildren();
+        this.obj.app.stage.removeChild(this._gameField);
         this.obj.app.stage.removeChild(this._scoreText);
     };
     GameoverGameState.prototype.onEnter = function () {
-        var _this = this;
         this.retryButton = new pixi.Text("retry", {
             fontFamily: "Futura",
             fontSize: 72,
@@ -41939,12 +41949,8 @@ var GameoverGameState = /** @class */ (function (_super) {
         this.retryButton.position.x = this.obj.app.renderer.width * 0.25;
         this.retryButton.position.y = this.obj.app.renderer.height * 0.5;
         this.retryButton.interactive = true;
-        this.retryButton.on("click", function () {
-            _this.obj.state = new MainGameState_1.MainGameState(_this.obj);
-        });
-        this.retryButton.on("touchstart", function () {
-            _this.obj.state = new MainGameState_1.MainGameState(_this.obj);
-        });
+        this.retryButton.on("click", this.onRetryButtonClicked.bind(this));
+        this.retryButton.on("touchstart", this.onRetryButtonClicked.bind(this));
         this.obj.app.stage.addChild(this.retryButton);
         this.tweetButton = new pixi.Text("tweet", {
             fontFamily: "Futura",
@@ -41960,6 +41966,9 @@ var GameoverGameState = /** @class */ (function (_super) {
         this.tweetButton.on("click", this.onTweetButtonClicked.bind(this));
         this.tweetButton.on("touchstart", this.onTweetButtonClicked.bind(this));
         this.obj.app.stage.addChild(this.tweetButton);
+    };
+    GameoverGameState.prototype.onRetryButtonClicked = function () {
+        this.obj.state = new MainGameState_1.MainGameState(this.obj);
     };
     GameoverGameState.prototype.onTweetButtonClicked = function () {
         var text = "\u3042\u306A\u305F\u306E\u5B9F\u9A13\u306E\u30B9\u30B3\u30A2\u306F\"" + this.obj.score + "\"\u3067\u3057\u305F\u3002 #\u3055\u308B\u306E\u3058\u3063\u3051\u3093 #traP3jam";
