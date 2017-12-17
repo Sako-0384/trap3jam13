@@ -35,6 +35,9 @@ export class GameoverGameState extends State<Game> {
         this.retryButton.on("click", () => {
             this.obj.state = new MainGameState(this.obj);
         });
+        this.retryButton.on("touchstart", () => {
+            this.obj.state = new MainGameState(this.obj);
+        });
 
         this.obj.app.stage.addChild(this.retryButton);
 
@@ -53,6 +56,12 @@ export class GameoverGameState extends State<Game> {
         this.tweetButton.position.y = this.obj.app.renderer.height * 0.5;
         this.tweetButton.interactive = true;
         this.tweetButton.on("click", () => {
+            const text = `あなたの実験のスコアは"${this.obj.score}"でした。 #さるのじっけん #traP3jam`;
+            const url = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
+            const win = window.open(url, '_blank');
+            win.focus();
+        });
+        this.tweetButton.on("touchstart", () => {
             const text = `あなたの実験のスコアは"${this.obj.score}"でした。 #さるのじっけん #traP3jam`;
             const url = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
             const win = window.open(url, '_blank');

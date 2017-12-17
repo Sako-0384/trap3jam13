@@ -23,6 +23,7 @@ export class NumberButton {
         this.e.position.y = y;
         this.e.interactive = true;
         this.e.on('click',this.onClick.bind(this));
+        this.e.on('touchstart',this.onClick.bind(this));
         this.state = state;
         this.cascadeCount = 0;
     }

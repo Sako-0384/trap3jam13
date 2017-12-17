@@ -28,6 +28,9 @@ export class TitleGameState extends State<Game> {
         this.titleButton.on("click", () => {
             this.obj.state = new MainGameState(this.obj);
         });
+        this.titleButton.on("touchstart", () => {
+            this.obj.state = new MainGameState(this.obj);
+        });
 
         this.obj.app.stage.addChild(this.titleButton);
     }
